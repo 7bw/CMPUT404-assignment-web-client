@@ -21,75 +21,124 @@
 import sys
 import socket
 import re
+import urllib
 # you may use urllib to encode data appropriately
 import urllib.parse
 
 def help():
-    print("httpclient.py [GET/POST] [URL]\n")
+	print("httpclient.py [GET/POST] [URL]\n")
 
 class HTTPResponse(object):
-    def __init__(self, code=200, body=""):
-        self.code = code
-        self.body = body
+	def __init__(self, code=200, body=""):
+		self.code = code
+		self.body = body
 
 class HTTPClient(object):
-    #def get_host_port(self,url):
+	#def get_host_port(self,url):
 
-    def connect(self, host, port):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((host, port))
-        return None
+	def connect(self, host, port):
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.socket.connect((host, port))
+		return None
 
-    def get_code(self, data):
-        return None
+	def get_code(self, data):
+		data = data.split(' ')
+		code = int(data[1])
+		return code
 
-    def get_headers(self,data):
-        return None
+	def get_headers(self,data):
+		data = data.split('\r\n\r\n', 1)
+		headers = data[0]
+		return headers
 
-    def get_body(self, data):
-        return None
-    
-    def sendall(self, data):
-        self.socket.sendall(data.encode('utf-8'))
-        
-    def close(self):
-        self.socket.close()
+	def get_body(self, data):
+		data = data.split('\r\n\r\n', 1)
+		body = data[1]
+		return body
+	
+	def sendall(self, data):
+		self.socket.sendall(data.encode('utf-8'))
+		
+	def close(self):
+		self.socket.close()
 
-    # read everything from the socket
-    def recvall(self, sock):
-        buffer = bytearray()
-        done = False
-        while not done:
-            part = sock.recv(1024)
-            if (part):
-                buffer.extend(part)
-            else:
-                done = not part
-        return buffer.decode('utf-8')
+	# read everything from the socket
+	def recvall(self, sock):
+		buffer = bytearray()
+		done = False
+		while not done:
+			part = sock.recv(1024)
+			if (part):
+				buffer.extend(part)
+			else:
+				done = not part
+		return buffer.decode('utf-8')
 
-    def GET(self, url, args=None):
-        code = 500
-        body = ""
-        return HTTPResponse(code, body)
+	def GET(self, url, args=None):
+		#code = 500
+		#body = ""
 
-    def POST(self, url, args=None):
-        code = 500
-        body = ""
-        return HTTPResponse(code, body)
+		parsed_url = urllib.parse.urlparse(url)
+		host = parsed_url.netloc.split(":")[0]
+		port = parsed_url.port if parsed_url.port else 80
+		self.connect(host,port)
+		
+	   
+		path = parsed_url.path if parsed_url.path else '/'
 
-    def command(self, url, command="GET", args=None):
-        if (command == "POST"):
-            return self.POST( url, args )
-        else:
-            return self.GET( url, args )
-    
+		if parsed_url.query:
+			path += ('?' + parsed_url.query)
+		
+		request = ("GET " + path + " HTTP/1.1\r\nHost: " + host + ":%d\r\nConnection: close\r\n\r\n" %port)
+		
+		self.sendall(request)
+		data = self.recvall(self.socket)
+		code = self.get_code(data)
+		body = self.get_body(data)
+		print("Status code: %d" % code)
+		print("Body: \n"+ body )
+		return HTTPResponse(code, body)
+
+	def POST(self, url, args=None):
+		#code = 500
+		#body = ""
+		parsed_url = urllib.parse.urlparse(url)
+		host = parsed_url.netloc.split(":")[0]
+		port = parsed_url.port if parsed_url.port else 80
+		self.connect(host,port)
+		path = parsed_url.path if parsed_url.path else '/'
+		if parsed_url.query:
+			path += ('?' + parsed_url.query)
+		request = ("POST " + path + " HTTP/1.1\r\nHost: " + host + ":%d\r\nConnection: close\r\n\r\n" %port)
+		if not args:
+			encode = ''
+		else:
+			encode = urllib.parse.urlencode(args)
+			content_length = len(str(encode))
+			request += ("Content-Length: %d\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\n" %content_length)
+			request += encode
+		self.sendall(request)
+		data = self.recvall(self.socket)
+		code = self.get_code(data)
+		body = self.get_body(data)
+
+		print("Status code: %d" % code)
+		print("Body: \n"+ body )
+		return HTTPResponse(code, body)
+
+	def command(self, url, command="GET", args=None):
+		if (command == "POST"):
+			return self.POST( url, args )
+		else:
+			return self.GET( url, args )
+	
 if __name__ == "__main__":
-    client = HTTPClient()
-    command = "GET"
-    if (len(sys.argv) <= 1):
-        help()
-        sys.exit(1)
-    elif (len(sys.argv) == 3):
-        print(client.command( sys.argv[2], sys.argv[1] ))
-    else:
-        print(client.command( sys.argv[1] ))
+	client = HTTPClient()
+	command = "GET"
+	if (len(sys.argv) <= 1):
+		help()
+		sys.exit(1)
+	elif (len(sys.argv) == 3):
+		print(client.command( sys.argv[2], sys.argv[1] ))
+	else:
+		print(client.command( sys.argv[1] ))
