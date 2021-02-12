@@ -157,6 +157,7 @@ class TestHTTPClient(unittest.TestCase):
 
     def test404GET(self):
         '''Test against 404 errors'''
+        print("Testing test404GET!")
         MyHTTPHandler.get = nothing_available
         http = httpclass.HTTPClient()
         req = http.GET("http://%s:%d/49872398432" % (BASEHOST,BASEPORT) )
@@ -165,6 +166,7 @@ class TestHTTPClient(unittest.TestCase):
 
     def test404POST(self):
         '''Test against 404 errors'''
+        print("Testing test404POST!")
         MyHTTPHandler.post = nothing_available
         http = httpclass.HTTPClient()
         req = http.POST("http://%s:%d/49872398432" % (BASEHOST,BASEPORT) )
@@ -173,6 +175,7 @@ class TestHTTPClient(unittest.TestCase):
 
     def testGET(self):
         '''Test HTTP GET'''
+        print("Testing testGET!")
         MyHTTPHandler.get = echo_path_get
         http = httpclass.HTTPClient()
         path = "abcdef/gjkd/dsadas"
@@ -184,6 +187,7 @@ class TestHTTPClient(unittest.TestCase):
 
     def testGETHeaders(self):
         '''Test HTTP GET Headers'''
+        print("Testing testGETHeaders!")
         MyHTTPHandler.get = header_check
         MyHTTPHandler.post = die_on_method
         http = httpclass.HTTPClient()
@@ -195,6 +199,7 @@ class TestHTTPClient(unittest.TestCase):
 
     def testPOSTHeaders(self):
         '''Test HTTP POST Headers'''
+        print("Testing testPOSTHeaders!")
         MyHTTPHandler.post = post_header_check
         MyHTTPHandler.get  = die_on_method
         http = httpclass.HTTPClient()
@@ -210,6 +215,7 @@ class TestHTTPClient(unittest.TestCase):
     def testInternetGets(self):
         '''Test HTTP Get in the wild, these webservers are far less
            forgiving'''
+        print("Testing testInternetGets!")
         MyHTTPHandler.get = echo_path_get
         http = httpclass.HTTPClient()        
         urls = [
@@ -236,6 +242,7 @@ class TestHTTPClient(unittest.TestCase):
     
     def testPOST(self):
         '''Test HTTP POST with an echo server'''
+        print("Testing testPOST!")
         MyHTTPHandler.post = echo_post
         http = httpclass.HTTPClient()
         path = "post_echoer"

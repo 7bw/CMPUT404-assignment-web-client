@@ -109,12 +109,14 @@ class HTTPClient(object):
 		path = parsed_url.path if parsed_url.path else '/'
 		if parsed_url.query:
 			path += ('?' + parsed_url.query)
-		request = ("POST " + path + " HTTP/1.1\r\nHost: " + host + ":%d\r\nConnection: close\r\n\r\n" %port)
+		request = ("POST " + path + " HTTP/1.1\r\nHost: " + host + ":%d\r\n" %port)
 		if not args:
-			encode = ''
+			request += ("Content-Length: 0\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\n")
+			request += ("Connection: close\r\n\r\n")
 		else:
 			encode = urllib.parse.urlencode(args)
 			content_length = len(str(encode))
+			print("Content Length = %d" %content_length)
 			request += ("Content-Length: %d\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\n" %content_length)
 			request += encode
 		self.sendall(request)
